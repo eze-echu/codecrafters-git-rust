@@ -36,7 +36,8 @@ fn main() {
             decoder
                 .read_to_string(&mut uncompressed_string)
                 .unwrap_or_else(|e| panic!("Failed to decode ZLib file:\n {e}"));
-            print!("{}", uncompressed_string);
+            let result: Vec<_> = uncompressed_string.split("\x00").collect();
+            print!("{}", result[1]);
         }
         _ => {
             println!("unknown command: {}", args[1]);
