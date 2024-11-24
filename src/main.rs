@@ -25,13 +25,13 @@ fn main() {
             let path = Path::new(".git/objects")
                 .join(hash[..2].chars().as_str())
                 .join(hash[2..].chars().as_str());
-            let zlib_compressed_string = fs::read_to_string(&path).unwrap_or_else(|e| {
+            let zlib_compressed = fs::read(&path).unwrap_or_else(|e| {
                 panic!(
-                    "Unable to read file: {}\n Error: {e}",
+                    "Unable to read file: {}\nError: {e}",
                     path.to_string_lossy()
                 )
             });
-            let mut decoder = ZlibDecoder::new(zlib_compressed_string.as_bytes());
+            let mut decoder = ZlibDecoder::new(&zlib_compressed[..]);
             let mut uncompressed_string: String = String::new();
             decoder
                 .read_to_string(&mut uncompressed_string)
