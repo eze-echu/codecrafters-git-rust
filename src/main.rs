@@ -155,7 +155,11 @@ impl HashObject {
 }
 impl Display for HashObject {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.value())
+        write!(
+            f,
+            "{}",
+            String::from_utf8(self.value.clone()).expect("Error displaying value")
+        )
     }
 }
 impl FromStr for HashObject {
