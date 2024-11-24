@@ -49,7 +49,7 @@ fn main() {
             }
         }
         "hash-object" => {
-            let mut command: (bool, String) = if &args[2] == "-w" {
+            let command: (bool, String) = if &args[2] == "-w" {
                 (true, args[3].clone())
             } else {
                 (false, args[2].clone())
@@ -64,9 +64,11 @@ fn main() {
                     let hash_hex = format!("{:x}", hash);
                     print!("{}", hash_hex);
                     if command.0 {
-                        let file_path = PathBuf::from(".git/objects")
-                            .join(&hash_hex[..2])
-                            .join(&hash_hex[2..]);
+                        let folder_path = PathBuf::from(".git/objects").join(&hash_hex[..2]);
+                        let file_path = folder_path.join(&hash_hex[2..]);
+                        if !file_path.exists() {
+                            fs::create_dir_all(folder_path).unwrap_or_else(|e| panic!("{}", e));
+                        }
                         match fs::write(file_path, hash_object.encode()) {
                             Ok(_) => {}
                             Err(e) => {
