@@ -173,6 +173,8 @@ impl TryFrom<Vec<u8>> for HashObject {
     type Error = Box<dyn std::error::Error>;
 
     fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
-        Ok(HashObject::new(HashObject::decode(value)?.as_str()))
+        let decoded_text = HashObject::decode(value)?;
+        let value = decoded_text.split("\x00").collect::<Vec<&str>>();
+        Ok(HashObject::new(value[1]))
     }
 }
