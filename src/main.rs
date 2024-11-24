@@ -21,7 +21,7 @@ fn main() {
             println!("Initialized git directory");
         }
         "cat-file" => {
-            let hash = &args[2];
+            let hash = &args[3];
             let path = Path::new(".git/objects")
                 .join(hash[..2].chars().as_str())
                 .join(hash[2..].chars().as_str());
