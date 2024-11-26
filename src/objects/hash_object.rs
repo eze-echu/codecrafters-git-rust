@@ -1,9 +1,7 @@
 pub(crate) use super::GitObject;
 use crate::objects::GitObjectEncoding;
-use flate2::read::{ZlibDecoder, ZlibEncoder};
 use std::error::Error;
 use std::fmt::{Display, Formatter};
-use std::io::Read;
 use std::str::FromStr;
 
 pub struct HashObject {

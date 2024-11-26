@@ -1,11 +1,6 @@
 use crate::objects::tree_object_entry::TreeObjectEntry;
-use crate::objects::{BoxedError, GitObject, GitObjectEncoding};
-use flate2::read::{ZlibDecoder, ZlibEncoder};
-use std::error::Error;
-use std::fmt::{write, Display, Formatter};
-use std::io::{ErrorKind, Read};
+use crate::objects::{BoxedError, GitObject};
 use std::ops::Add;
-use std::str::FromStr;
 
 struct TreeObject {
     entries: Vec<TreeObjectEntry>,

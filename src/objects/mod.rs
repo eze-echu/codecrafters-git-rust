@@ -5,8 +5,6 @@ mod tree_object_entry;
 use flate2::read::{ZlibDecoder, ZlibEncoder};
 pub use hash_object::HashObject;
 use std::error::Error;
-use std::fmt;
-use std::fmt::{Display, Formatter};
 use std::io::Read;
 
 pub type BoxedError = Box<dyn std::error::Error>;

@@ -2,11 +2,9 @@ mod objects;
 use objects::{GitObject, HashObject};
 
 use crate::objects::GitObjectEncoding;
-use flate2::read::ZlibDecoder;
 use sha1::{Digest, Sha1};
 #[allow(unused_imports)]
 use std::env;
-use std::error::Error;
 #[allow(unused_imports)]
 use std::fs;
 use std::path::{Path, PathBuf};
