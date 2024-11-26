@@ -1,9 +1,12 @@
-mod hash_object;
-use hash_object::HashObject;
+mod objects;
+use objects::{GitObject, HashObject};
 
+use crate::objects::GitObjectEncoding;
+use flate2::read::ZlibDecoder;
 use sha1::{Digest, Sha1};
 #[allow(unused_imports)]
 use std::env;
+use std::error::Error;
 #[allow(unused_imports)]
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -36,7 +39,7 @@ fn main() {
             });
             match HashObject::try_from(zlib_compressed) {
                 Ok(hash_object) => {
-                    print!("{}", hash_object)
+                    print!("{}", hash_object.formatted_value())
                 }
                 Err(e) => {
                     panic!(
@@ -59,7 +62,7 @@ fn main() {
                     .as_str(),
             ) {
                 Ok(hash_object) => {
-                    let hash = Sha1::digest(hash_object.value_as_byte());
+                    let hash = Sha1::digest(hash_object.value_as_bytes());
                     let hash_hex = format!("{:x}", hash);
                     print!("{}", hash_hex);
                     if command.0 {
@@ -68,7 +71,10 @@ fn main() {
                         if !file_path.exists() {
                             fs::create_dir_all(folder_path).unwrap_or_else(|e| panic!("{}", e));
                         }
-                        match fs::write(file_path, hash_object.encode()) {
+                        match fs::write(
+                            file_path,
+                            GitObjectEncoding::encode(hash_object.formatted_value()),
+                        ) {
                             Ok(_) => {}
                             Err(e) => {
                                 print!("{}", hash_hex);
