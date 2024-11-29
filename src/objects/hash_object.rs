@@ -1,15 +1,17 @@
 pub(crate) use super::GitObject;
-use crate::objects::GitObjectEncoding;
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
+use std::sync::Arc;
 
 pub struct HashObject {
-    value: Vec<u8>,
+    value: Arc<[u8]>,
 }
 impl HashObject {
     fn new(text: &str) -> Self {
-        Self { value: text.into() }
+        Self {
+            value: Arc::from(text.as_bytes()),
+        }
     }
 }
 impl GitObject for HashObject {
@@ -17,12 +19,12 @@ impl GitObject for HashObject {
         format!(
             "blob {}\x00{}",
             self.size(),
-            String::from_utf8(self.value.clone()).unwrap()
+            String::from_utf8(self.value.to_vec()).unwrap()
         )
     }
 
     fn unformatted_value(&self) -> String {
-        String::from_utf8(self.value.clone()).expect("Error displaying value")
+        String::from_utf8(self.value.to_vec()).expect("Error displaying value")
     }
 
     fn value_as_bytes(&self) -> Vec<u8> {
@@ -33,7 +35,7 @@ impl GitObject for HashObject {
         self.value.len()
     }
     fn is_valid_object(string_to_check: &str) -> bool {
-        let re = regex::bytes::Regex::new("blob [0-9]+\x00.*$").unwrap();
+        let re = regex::bytes::Regex::new("blob [0-9]+\x00.*").unwrap();
         re.is_match(string_to_check.as_bytes())
     }
 }
@@ -48,8 +50,7 @@ impl TryFrom<Vec<u8>> for HashObject {
     type Error = Box<dyn Error>;
 
     fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
-        let encoder = GitObjectEncoding;
-        let decoded_text = GitObjectEncoding::decode::<Self>(value)?;
+        let decoded_text = Self::decode(value)?;
         let value = decoded_text.split("\x00").collect::<Vec<&str>>();
         Ok(HashObject::new(value[1]))
     }
@@ -59,7 +60,7 @@ impl Display for HashObject {
         write!(
             f,
             "{}",
-            String::from_utf8(self.value.clone()).expect("Error displaying value")
+            String::from_utf8(self.value.to_vec()).expect("Error displaying value")
         )
     }
 }

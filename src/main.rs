@@ -1,7 +1,6 @@
 mod objects;
 use objects::{GitObject, HashObject};
 
-use crate::objects::GitObjectEncoding;
 use sha1::{Digest, Sha1};
 #[allow(unused_imports)]
 use std::env;
@@ -14,7 +13,6 @@ fn main() {
     // You can use print statements as follows for debugging, they'll be visible when running tests.
     eprintln!("Logs from your program will appear here!");
 
-    // Uncomment this block to pass the first stage
     let args: Vec<String> = env::args().collect();
     match args[1].as_str() {
         "init" => {
@@ -43,16 +41,18 @@ fn main() {
                     panic!(
                         "Error decoding file: {}\nError:{}",
                         path.to_string_lossy(),
-                        e.to_string()
+                        e
                     );
                 }
             }
         }
         "hash-object" => {
-            let command: (bool, String) = if &args[2] == "-w" {
-                (true, args[3].clone())
-            } else {
-                (false, args[2].clone())
+            let command: (bool, String) = {
+                if &args[2] == "-w" {
+                    (true, args[3].clone())
+                } else {
+                    (false, args[2].clone())
+                }
             };
             match HashObject::from_str(
                 fs::read_to_string(PathBuf::from(command.1))
@@ -69,10 +69,7 @@ fn main() {
                         if !file_path.exists() {
                             fs::create_dir_all(folder_path).unwrap_or_else(|e| panic!("{}", e));
                         }
-                        match fs::write(
-                            file_path,
-                            GitObjectEncoding::encode(hash_object.formatted_value()),
-                        ) {
+                        match fs::write(file_path, hash_object.encode()) {
                             Ok(_) => {}
                             Err(e) => {
                                 print!("{}", hash_hex);

@@ -13,3 +13,6 @@ flate2 = "1.0.34"                                # compression
 regex = "1.11.1"
 sha1 = "0.10.6"
 thiserror = "1.0.38"                             # error handling
+
+[dev-dependencies]
+tempfile = "3.14.0"

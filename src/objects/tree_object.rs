@@ -1,17 +1,22 @@
 use crate::objects::tree_object_entry::TreeObjectEntry;
 use crate::objects::{BoxedError, GitObject};
 use std::ops::Add;
+use std::sync::Arc;
 
 struct TreeObject {
-    entries: Vec<TreeObjectEntry>,
+    entries: Arc<Vec<TreeObjectEntry>>,
 }
 impl TreeObject {
-    pub fn new(unformatted_tree_entries: Vec<String>) -> Self {
+    pub fn new_from_file(unformatted_tree_entries: Vec<String>) -> Self {
         let mut entries: Vec<TreeObjectEntry> = vec![];
         for unformatted_tree_entry in unformatted_tree_entries {
-            entries.push(TreeObjectEntry::new(unformatted_tree_entry.as_str()))
+            entries.push(TreeObjectEntry::new_from_file(
+                unformatted_tree_entry.as_str(),
+            ))
         }
-        Self { entries }
+        Self {
+            entries: Arc::new(entries),
+        }
     }
     fn get_only_entities_from_str(s: &str) -> Vec<String> {
         let mut result = s
@@ -27,13 +32,13 @@ impl TryFrom<Vec<u8>> for TreeObject {
     type Error = BoxedError;
 
     fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
-        match std::str::from_utf8(&value) {
+        match Self::decode(value) {
             Ok(text_value) => {
-                let mut separated_entities = Self::get_only_entities_from_str(text_value);
+                let mut separated_entities = Self::get_only_entities_from_str(&text_value);
                 separated_entities.remove(0);
-                Ok(Self::new(separated_entities))
+                Ok(Self::new_from_file(separated_entities))
             }
-            Err(e) => Err(e.into()),
+            Err(e) => Err(e),
         }
     }
 }
@@ -41,7 +46,7 @@ impl TryFrom<Vec<u8>> for TreeObject {
 impl GitObject for TreeObject {
     fn formatted_value(&self) -> String {
         let mut entries = String::new();
-        for entry in &self.entries {
+        for entry in self.entries.to_vec().as_slice() {
             entries = entries.add(&entry.formatted_value())
         }
         format!("tree {}\x00{}", self.size(), entries)
@@ -49,7 +54,7 @@ impl GitObject for TreeObject {
 
     fn unformatted_value(&self) -> String {
         let mut result = String::new();
-        for entry in &self.entries {
+        for entry in self.entries.to_vec().as_slice() {
             result += &format!("{} \n", entry.unformatted_value()).to_string();
         }
         result
