@@ -27,6 +27,28 @@ impl TreeObject {
         result.remove(0);
         result
     }
+    fn split_bytes_from_treefile_into_entities(file_data: Vec<u8>) -> Vec<String> {
+        let split_by_null_space = file_data
+            .split(|&byte| byte == 0 && byte == b' ')
+            .skip(1)
+            .map(|s| s.to_vec())
+            .collect::<Vec<Vec<u8>>>();
+        eprintln!("{:?}", split_by_null_space);
+        vec![]
+        // let mut null_found = false;
+        // let mut space_found = false;
+        // let mut buffer = vec![];
+        // let mut buf_string = String::new();
+        // for byte in file_data{
+        //     if byte == 0 {
+        //         if null_found && space_found {
+        //             return buffer;
+        //         }
+        //     }else if byte == b' ' {
+        //
+        //     }
+        // }
+    }
 }
 
 impl TryFrom<Vec<u8>> for TreeObject {
@@ -35,14 +57,14 @@ impl TryFrom<Vec<u8>> for TreeObject {
     fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
         match Self::decode_file(value) {
             Ok(text_value) => {
-                let re = regex::bytes::Regex::new("[0-9]+ .*\x00").unwrap();
-                let split = re.split(&text_value);
+                //let re = regex::bytes::Regex::new("[0-9]+ .*\x00").unwrap();
+                //let split = re.split(&text_value);
                 //let mut separated_entities = Self::get_only_entities_from_str(&text_value);
                 //separated_entities.remove(0);
                 Ok(Self::new_from_file(
-                    split
-                        .map(|e| String::from_utf8(Vec::from(e)).unwrap())
-                        .collect::<Vec<String>>(),
+                    Self::split_bytes_from_treefile_into_entities(text_value), //split
+                                                                               //    .map(|e| String::from_utf8(Vec::from(e)).unwrap())
+                                                                               //    .collect::<Vec<String>>(),
                 ))
             }
             Err(e) => Err(e),
