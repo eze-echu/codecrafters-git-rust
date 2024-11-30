@@ -8,6 +8,7 @@ pub struct TreeObject {
     entries: Arc<Vec<TreeObjectEntry>>,
 }
 impl TreeObject {
+    const REGEX_VAL: &'static str = "([0-9]{5,6}) ([^\x00]+)\x00";
     pub fn new_from_file(unformatted_tree_entries: Vec<String>) -> Self {
         let mut entries: Vec<TreeObjectEntry> = vec![];
         for unformatted_tree_entry in unformatted_tree_entries {
@@ -29,45 +30,21 @@ impl TreeObject {
         result
     }
     fn split_bytes_from_treefile_into_entities(file_data: Vec<u8>) -> Vec<String> {
-        let split_data = file_data
-            .split(|&byte| byte == NULL_BYTE || byte == SPACE_BYTE)
-            .map(ToOwned::to_owned)
-            .collect::<Vec<Vec<u8>>>();
-
-        let mut buffer_for_mode_and_name: Vec<Vec<u8>> = Vec::new();
-        buffer_for_mode_and_name.push(split_data[2].clone());
-
-        // for (index, data_chunk) in split_data.iter().enumerate().skip(3).step_by(2) {
-        //     buffer_for_mode_and_name.push(data_chunk.clone());
-        //     let sha = Sha1::digest(data_chunk).to_vec();
-        //     if let Some(next_item) = split_data.get(index + 1) {
-        //         let remainder = next_item.split_at(sha.len()).1.to_vec();
-        //         buffer_for_mode_and_name.push(remainder);
-        //     }
-        // }
-        for i in (3..split_data.len()).step_by(2) {
-            let value = &split_data[i];
-            buffer_for_mode_and_name.push(value.clone());
-
-            let sha = Sha1::digest(value).to_vec();
-
-            if let Some(next_item) = split_data.get(i + 1) {
-                //println!("{:x?}", next_item);
-                let remainder = next_item.split_at(sha.len()).1.to_vec();
-                buffer_for_mode_and_name.push(remainder);
-            }
+        let re = regex::bytes::Regex::new(Self::REGEX_VAL).unwrap();
+        //println!("{}", re.is_match(&file_data));
+        let entities = re.captures_iter(file_data.as_slice());
+        let mut result: Vec<Vec<u8>> = vec![];
+        for captures in entities {
+            //println!("{:?}", &captures[1]);
+            //println!("{:?}", &captures[2]);
+            let mut to_send = vec![];
+            to_send.append(&mut captures[1].to_vec());
+            to_send.push(b' ');
+            to_send.append(&mut captures[2].to_vec());
+            result.push(to_send);
         }
-        buffer_for_mode_and_name.pop();
-        let mut buffer_to_group_mode_and_name = vec![];
-        for (i, entry) in buffer_for_mode_and_name.iter().enumerate() {
-            if i % 2 == 0 {
-                let mut temp = entry.to_vec();
-                temp.push(b' ');
-                temp.append(&mut buffer_for_mode_and_name[i + 1].to_vec());
-                buffer_to_group_mode_and_name.push(temp);
-            }
-        }
-        buffer_to_group_mode_and_name
+        result.sort();
+        result
             .into_iter()
             .map(|e| String::from_utf8(e).unwrap())
             .collect()
@@ -89,18 +66,13 @@ impl TryFrom<Vec<u8>> for TreeObject {
     fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
         match Self::decode_file(value) {
             Ok(text_value) => {
-                let re = regex::bytes::Regex::new("^tree [0-9]+\x00").unwrap();
-                if re.is_match(text_value.as_slice()) {
-                    //let split = re.split(&text_value);
-                    //let mut separated_entities = Self::get_only_entities_from_str(&text_value);
-                    Ok(Self::new_from_file(
-                        Self::split_bytes_from_treefile_into_entities(text_value), //split
-                                                                                   //    .map(|e| String::from_utf8(Vec::from(e)).unwrap())
-                                                                                   //    .collect::<Vec<String>>(),
-                    ))
-                } else {
-                    Err(format!("File is not a valid TreeObject:\n{:x?}", text_value).into())
-                }
+                //let split = re.split(&text_value);
+                //let mut separated_entities = Self::get_only_entities_from_str(&text_value);
+                Ok(Self::new_from_file(
+                    Self::split_bytes_from_treefile_into_entities(text_value), //split
+                                                                               //    .map(|e| String::from_utf8(Vec::from(e)).unwrap())
+                                                                               //    .collect::<Vec<String>>(),
+                ))
             }
             Err(e) => Err(e),
         }
