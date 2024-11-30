@@ -29,6 +29,12 @@ impl TreeObjectEntry {
     fn hash_value(&self) -> Vec<u8> {
         Sha1::digest(self.entry_name.to_vec()).to_vec()
     }
+    pub fn name_as_string(&self) -> String {
+        String::from_utf8(self.entry_name.to_vec()).unwrap()
+    }
+    pub fn mode(&self) -> u32 {
+        self.entry_mode
+    }
 }
 
 impl GitObject for TreeObjectEntry {

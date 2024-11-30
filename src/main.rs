@@ -94,7 +94,9 @@ fn main() {
                 .join(hash[2..].chars().as_str());
             match TreeObject::try_from(fs::read(&path).unwrap()) {
                 Ok(tree_object) => {
-                    println!("{}", tree_object.formatted_value());
+                    for name in tree_object.name_only() {
+                        println!("{}", name);
+                    }
                 }
                 Err(e) => {
                     panic!(

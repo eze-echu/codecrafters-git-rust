@@ -71,6 +71,15 @@ impl TreeObject {
             .map(|e| String::from_utf8(e).unwrap())
             .collect()
     }
+    pub fn name_only(&self) -> Vec<String> {
+        let mut names = self
+            .entries
+            .iter()
+            .map(|e| e.name_as_string())
+            .collect::<Vec<String>>();
+        names.sort();
+        names
+    }
 }
 
 impl TryFrom<Vec<u8>> for TreeObject {
