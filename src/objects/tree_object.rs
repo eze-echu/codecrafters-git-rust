@@ -29,7 +29,7 @@ impl TreeObject {
     }
     fn split_bytes_from_treefile_into_entities(file_data: Vec<u8>) -> Vec<String> {
         let split_by_null_space = file_data
-            .split(|&byte| byte == 0 && byte == b' ')
+            .split(|&byte| byte == 0 || byte == b' ')
             .map(|s| s.to_vec())
             .collect::<Vec<Vec<u8>>>();
         println!("{:#?}", split_by_null_space);
