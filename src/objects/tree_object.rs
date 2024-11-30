@@ -37,7 +37,7 @@ impl TreeObject {
         let mut buffer_for_mode_and_name: Vec<Vec<u8>> = Vec::new();
         buffer_for_mode_and_name.push(split_data[2].clone());
 
-        for (index, data_chunk) in split_data.iter().enumerate().skip(3).step_by(2) {
+        for (index, data_chunk) in split_data.iter().enumerate().skip(2).step_by(2) {
             buffer_for_mode_and_name.push(data_chunk.clone());
             let sha = Sha1::digest(data_chunk).to_vec();
             if let Some(next_item) = split_data.get(index + 1) {
