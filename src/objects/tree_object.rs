@@ -38,7 +38,6 @@ impl TryFrom<Vec<u8>> for TreeObject {
                 let re = regex::bytes::Regex::new("[0-9]+ .*\x00").unwrap();
                 let split = re.split(&text_value);
                 //let mut separated_entities = Self::get_only_entities_from_str(&text_value);
-                println!("{:?}", split);
                 //separated_entities.remove(0);
                 Ok(Self::new_from_file(
                     split
