@@ -8,7 +8,7 @@ pub struct TreeObject {
     entries: Arc<Vec<TreeObjectEntry>>,
 }
 impl TreeObject {
-    const REGEX_VAL: &'static str = "([0-9]{5,6}) ([^\x00]+)\x00";
+    const REGEX_VAL: &'static str = "([0-9]{5,6}) ([^\x00]+)\x00(?-u:[^\x00]{20})";
     pub fn new_from_file(unformatted_tree_entries: Vec<String>) -> Self {
         let mut entries: Vec<TreeObjectEntry> = vec![];
         for unformatted_tree_entry in unformatted_tree_entries {
@@ -37,6 +37,7 @@ impl TreeObject {
         for captures in entities {
             //println!("{:?}", &captures[1]);
             //println!("{:?}", &captures[2]);
+            //println!("{:?}", &captures[3].to_vec());
             let mut to_send = vec![];
             to_send.append(&mut captures[1].to_vec());
             to_send.push(b' ');
