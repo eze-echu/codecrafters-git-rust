@@ -1,5 +1,6 @@
 use crate::objects::tree_object_entry::TreeObjectEntry;
-use crate::objects::{BoxedError, GitObject};
+use crate::objects::{BoxedError, GitObject, NULL_BYTE, SPACE_BYTE};
+use sha1::{Digest, Sha1};
 use std::ops::Add;
 use std::sync::Arc;
 
@@ -28,25 +29,47 @@ impl TreeObject {
         result
     }
     fn split_bytes_from_treefile_into_entities(file_data: Vec<u8>) -> Vec<String> {
-        let split_by_null_space = file_data
-            .split(|&byte| byte == 0 || byte == b' ')
-            .map(|s| s.to_vec())
+        let split_data = file_data
+            .split(|&byte| byte == NULL_BYTE || byte == SPACE_BYTE)
+            .map(ToOwned::to_owned)
             .collect::<Vec<Vec<u8>>>();
-        println!("{:#?}", split_by_null_space);
-        vec![]
-        // let mut null_found = false;
-        // let mut space_found = false;
-        // let mut buffer = vec![];
-        // let mut buf_string = String::new();
-        // for byte in file_data{
-        //     if byte == 0 {
-        //         if null_found && space_found {
-        //             return buffer;
-        //         }
-        //     }else if byte == b' ' {
+
+        let mut buffer_for_mode_and_name: Vec<Vec<u8>> = Vec::new();
+        buffer_for_mode_and_name.push(split_data[2].clone());
+
+        for (index, data_chunk) in split_data.iter().enumerate().skip(3).step_by(2) {
+            buffer_for_mode_and_name.push(data_chunk.clone());
+            let sha = Sha1::digest(data_chunk).to_vec();
+            if let Some(next_item) = split_data.get(index + 1) {
+                let remainder = next_item.split_at(sha.len()).1.to_vec();
+                buffer_for_mode_and_name.push(remainder);
+            }
+        }
+        // for i in (3..split_data.len()).step_by(2) {
+        //     let value = &split_data[i];
+        //     buffer_for_mode_and_name.push(value.clone());
         //
+        //     let sha = Sha1::digest(value).to_vec();
+        //
+        //     if let Some(next_item) = split_data.get(i + 1) {
+        //         let remainder = next_item.split_at(sha.len()).1.to_vec();
+        //         buffer_for_mode_and_name.push(remainder);
         //     }
         // }
+        buffer_for_mode_and_name.pop();
+        let mut buffer_to_group_mode_and_name = vec![];
+        for (i, entry) in buffer_for_mode_and_name.iter().enumerate() {
+            if i % 2 == 0 {
+                let mut temp = entry.to_vec();
+                temp.push(b' ');
+                temp.append(&mut buffer_for_mode_and_name[i + 1].to_vec());
+                buffer_to_group_mode_and_name.push(temp);
+            }
+        }
+        buffer_to_group_mode_and_name
+            .into_iter()
+            .map(|e| String::from_utf8(e).unwrap())
+            .collect()
     }
 }
 

@@ -8,6 +8,8 @@ use std::error::Error;
 use std::io::Read;
 pub use tree_object::TreeObject;
 
+const NULL_BYTE: u8 = 0;
+const SPACE_BYTE: u8 = b' ';
 pub type BoxedError = Box<dyn std::error::Error>;
 
 /// GitObject is an object used in the git file system, it holds a value and provides
