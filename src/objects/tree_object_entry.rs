@@ -64,7 +64,7 @@ impl GitObject for TreeObjectEntry {
     }
 
     fn is_valid_object(string_to_check: &str) -> bool {
-        let re = regex::bytes::Regex::new("[0-9]6+ .*\x00").unwrap();
+        let re = regex::bytes::Regex::new("[0-9]+ .*\x00").unwrap();
         re.is_match(string_to_check.as_bytes())
     }
 }

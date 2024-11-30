@@ -33,11 +33,18 @@ impl TryFrom<Vec<u8>> for TreeObject {
     type Error = BoxedError;
 
     fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
-        match Self::decoded_to_string(value) {
+        match Self::decode_file(value) {
             Ok(text_value) => {
-                let mut separated_entities = Self::get_only_entities_from_str(&text_value);
-                separated_entities.remove(0);
-                Ok(Self::new_from_file(separated_entities))
+                let re = regex::bytes::Regex::new("[0-9]+ .*\x00").unwrap();
+                let split = re.split(&text_value);
+                //let mut separated_entities = Self::get_only_entities_from_str(&text_value);
+                println!("{:?}", split);
+                //separated_entities.remove(0);
+                Ok(Self::new_from_file(
+                    split
+                        .map(|e| String::from_utf8(Vec::from(e)).unwrap())
+                        .collect::<Vec<String>>(),
+                ))
             }
             Err(e) => Err(e),
         }
