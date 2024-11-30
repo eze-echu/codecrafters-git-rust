@@ -37,27 +37,28 @@ impl TreeObject {
         let mut buffer_for_mode_and_name: Vec<Vec<u8>> = Vec::new();
         buffer_for_mode_and_name.push(split_data[2].clone());
 
-        for (index, data_chunk) in split_data.iter().enumerate().skip(3).step_by(2) {
-            buffer_for_mode_and_name.push(data_chunk.clone());
-            let sha = Sha1::digest(data_chunk).to_vec();
-            if let Some(next_item) = split_data.get(index + 1) {
-                let remainder = next_item.split_at(sha.len()).1.to_vec();
-                buffer_for_mode_and_name.push(remainder);
-            }
-        }
-        // for i in (3..split_data.len()).step_by(2) {
-        //     let value = &split_data[i];
-        //     buffer_for_mode_and_name.push(value.clone());
-        //
-        //     let sha = Sha1::digest(value).to_vec();
-        //
-        //     if let Some(next_item) = split_data.get(i + 1) {
-        //         if next_item.starts_with(sha.as_slice()) {
-        //             let remainder = next_item.split_at(sha.len()).1.to_vec();
-        //             buffer_for_mode_and_name.push(remainder);
-        //         }
+        // for (index, data_chunk) in split_data.iter().enumerate().skip(3).step_by(2) {
+        //     buffer_for_mode_and_name.push(data_chunk.clone());
+        //     let sha = Sha1::digest(data_chunk).to_vec();
+        //     if let Some(next_item) = split_data.get(index + 1) {
+        //         let remainder = next_item.split_at(sha.len()).1.to_vec();
+        //         buffer_for_mode_and_name.push(remainder);
         //     }
         // }
+        for i in (3..split_data.len()).step_by(2) {
+            let value = &split_data[i];
+            buffer_for_mode_and_name.push(value.clone());
+
+            let sha = Sha1::digest(value).to_vec();
+
+            if let Some(next_item) = split_data.get(i + 1) {
+                if next_item.starts_with(sha.as_slice()) {
+                    println!("{:x?}", next_item);
+                    let remainder = next_item.split_at(sha.len()).1.to_vec();
+                    buffer_for_mode_and_name.push(remainder);
+                }
+            }
+        }
         buffer_for_mode_and_name.pop();
         let mut buffer_to_group_mode_and_name = vec![];
         for (i, entry) in buffer_for_mode_and_name.iter().enumerate() {
