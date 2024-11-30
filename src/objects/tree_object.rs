@@ -3,7 +3,7 @@ use crate::objects::{BoxedError, GitObject};
 use std::ops::Add;
 use std::sync::Arc;
 
-struct TreeObject {
+pub struct TreeObject {
     entries: Arc<Vec<TreeObjectEntry>>,
 }
 impl TreeObject {
@@ -14,6 +14,7 @@ impl TreeObject {
                 unformatted_tree_entry.as_str(),
             ))
         }
+        entries.sort();
         Self {
             entries: Arc::new(entries),
         }
@@ -32,7 +33,7 @@ impl TryFrom<Vec<u8>> for TreeObject {
     type Error = BoxedError;
 
     fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
-        match Self::decode(value) {
+        match Self::decoded_to_string(value) {
             Ok(text_value) => {
                 let mut separated_entities = Self::get_only_entities_from_str(&text_value);
                 separated_entities.remove(0);
@@ -60,7 +61,7 @@ impl GitObject for TreeObject {
         result
     }
 
-    fn value_as_bytes(&self) -> Vec<u8> {
+    fn formatted_value_as_bytes(&self) -> Vec<u8> {
         let answer = self.formatted_value();
         answer.as_bytes().to_vec()
     }

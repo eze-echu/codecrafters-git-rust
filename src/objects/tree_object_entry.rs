@@ -6,7 +6,12 @@ use std::sync::Arc;
 #[cfg(test)]
 use tempfile::TempDir;
 
-#[derive(Clone)]
+/// TreeObjectEntry
+///
+///
+/// ### Formatted value
+/// ``` <mode> <name>\0<sha1>
+#[derive(Clone, Ord, Eq, PartialOrd, PartialEq)]
 pub(super) struct TreeObjectEntry {
     entry_name: Arc<Vec<u8>>,
     entry_mode: u32,
@@ -20,6 +25,9 @@ impl TreeObjectEntry {
                 .parse()
                 .expect("Unable to parse mode from string when creating TreeObjectEntry"),
         }
+    }
+    fn hash_value(&self) -> Vec<u8> {
+        Sha1::digest(self.entry_name.to_vec()).to_vec()
     }
 }
 
@@ -41,8 +49,14 @@ impl GitObject for TreeObjectEntry {
         String::from_utf8(self.entry_name.to_vec()).expect("Error displaying value")
     }
 
-    fn value_as_bytes(&self) -> Vec<u8> {
-        self.formatted_value().as_bytes().to_vec()
+    fn formatted_value_as_bytes(&self) -> Vec<u8> {
+        let mut formatted: Vec<u8> = vec![];
+        formatted.push(self.entry_mode.to_be_bytes()[0]);
+        formatted.append(&mut b"\x00".to_vec());
+        formatted.append(&mut self.entry_name.to_vec());
+        let mut hash = Sha1::digest(self.entry_name.to_vec()).to_vec();
+        formatted.append(&mut hash);
+        formatted
     }
 
     fn size(&self) -> usize {
@@ -50,7 +64,8 @@ impl GitObject for TreeObjectEntry {
     }
 
     fn is_valid_object(string_to_check: &str) -> bool {
-        true
+        let re = regex::bytes::Regex::new("[0-9]6+ .*\x00").unwrap();
+        re.is_match(string_to_check.as_bytes())
     }
 }
 #[test]
@@ -78,11 +93,14 @@ fn test_creation() {
 
     let new = TreeObjectEntry::new_from_file("100644 foo.txt");
     fs::write(temp.join("test"), new.encode()).unwrap();
-    let read = TreeObjectEntry::decode(fs::read(temp.join("test")).unwrap()).unwrap();
-    println!("{}", read);
-    assert_eq!(new.formatted_value(), read);
+    let checked = new.formatted_value_as_bytes();
+    let read = fs::read(temp.join("test")).unwrap();
+    println!("{:?}", temp.join("test").canonicalize());
+    println!("{:x?}", read);
     assert_eq!(
-        new.formatted_value(),
-        format!("100644 foo.txt\x00{:x}", Sha1::digest("foo.txt"))
-    )
+        TreeObjectEntry::decode_file(read.clone()).unwrap()[read.len() - 29..],
+        new.hash_value()
+    );
+    assert_eq!(TreeObjectEntry::decode_file(read).unwrap(), checked);
+    //assert!(read.to_vec().(Sha1::digest(new.entry_name.to_vec()).as_slice()));
 }

@@ -1,5 +1,5 @@
 mod objects;
-use objects::{GitObject, HashObject};
+use objects::{GitObject, HashObject, TreeObject};
 
 use sha1::{Digest, Sha1};
 #[allow(unused_imports)]
@@ -60,7 +60,7 @@ fn main() {
                     .as_str(),
             ) {
                 Ok(hash_object) => {
-                    let hash = Sha1::digest(hash_object.value_as_bytes());
+                    let hash = Sha1::digest(hash_object.formatted_value_as_bytes());
                     let hash_hex = format!("{:x}", hash);
                     print!("{}", hash_hex);
                     if command.0 {
@@ -84,6 +84,24 @@ fn main() {
                         &args[2],
                         fs::read_to_string(PathBuf::from(&args[2])).unwrap()
                     )
+                }
+            }
+        }
+        "ls-tree" => {
+            let hash = &args[3];
+            let path = Path::new(".git/objects")
+                .join(hash[..2].chars().as_str())
+                .join(hash[2..].chars().as_str());
+            match TreeObject::try_from(fs::read(&path).unwrap()) {
+                Ok(tree_object) => {
+                    println!("{}", tree_object.formatted_value());
+                }
+                Err(e) => {
+                    panic!(
+                        "Error decoding file: {}\nError:{}",
+                        path.to_string_lossy(),
+                        e
+                    );
                 }
             }
         }

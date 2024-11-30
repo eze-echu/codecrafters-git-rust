@@ -27,7 +27,7 @@ impl GitObject for HashObject {
         String::from_utf8(self.value.to_vec()).expect("Error displaying value")
     }
 
-    fn value_as_bytes(&self) -> Vec<u8> {
+    fn formatted_value_as_bytes(&self) -> Vec<u8> {
         let answer = self.formatted_value();
         answer.as_bytes().to_vec()
     }
@@ -50,7 +50,7 @@ impl TryFrom<Vec<u8>> for HashObject {
     type Error = Box<dyn Error>;
 
     fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
-        let decoded_text = Self::decode(value)?;
+        let decoded_text = Self::decoded_to_string(value)?;
         let value = decoded_text.split("\x00").collect::<Vec<&str>>();
         Ok(HashObject::new(value[1]))
     }

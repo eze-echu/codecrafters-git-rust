@@ -6,6 +6,7 @@ use flate2::read::{ZlibDecoder, ZlibEncoder};
 pub use hash_object::HashObject;
 use std::error::Error;
 use std::io::Read;
+pub use tree_object::TreeObject;
 
 pub type BoxedError = Box<dyn std::error::Error>;
 
@@ -40,7 +41,7 @@ pub(crate) trait GitObject {
     ///
     /// Used when encrypting to hash.
     fn unformatted_value(&self) -> String;
-    fn value_as_bytes(&self) -> Vec<u8>;
+    fn formatted_value_as_bytes(&self) -> Vec<u8>;
     fn size(&self) -> usize;
     /// Checks if the string provided fulfills the conditions to be a formatted value.
     /// It returns true if the string equals the formatted value (see value())
@@ -52,7 +53,7 @@ pub(crate) trait GitObject {
     /// encode takes the formatted value as bytes and returns a Zlib encoded Vec<u8>
     /// It is to be used when saving the object to a file
     fn encode(&self) -> Vec<u8> {
-        let formatted_value = self.value_as_bytes();
+        let formatted_value = self.formatted_value_as_bytes();
         let mut encoder =
             ZlibEncoder::new(formatted_value.as_slice(), flate2::Compression::default());
         let mut buffer = vec![];
@@ -66,22 +67,33 @@ pub(crate) trait GitObject {
     ///
     /// ### Errors
     /// This functions returns an error if it can decode the value, or if the decoded value is not the desired object
-    fn decode(encoded_value: Vec<u8>) -> Result<String, Box<dyn Error>> {
-        let mut decoder = ZlibDecoder::new(&encoded_value[..]);
-        let mut decompressed: String = String::new();
-        match decoder.read_to_string(&mut decompressed) {
-            Ok(_) => {
-                if Self::is_valid_object(&decompressed) {
-                    Ok(decompressed)
+    fn decoded_to_string(encoded_value: Vec<u8>) -> Result<String, Box<dyn Error>> {
+        let decompressed: Result<String, BoxedError> = Self::decode_file(encoded_value)
+            .map(|decoded_value| String::from_utf8(decoded_value).unwrap());
+        match decompressed {
+            Ok(resulting_string) => {
+                if Self::is_valid_object(&resulting_string) {
+                    Ok(resulting_string)
                 } else {
                     Err(format!(
                         "Decoded Value is not a valid Hash Object:\n. {}",
-                        decompressed
+                        resulting_string
                     )
                     .to_string()
                     .into())
                 }
             }
+            Err(e) => {
+                eprintln!("Error Decoding from Vec<u8> to HashObject: {e}");
+                Err(e)
+            }
+        }
+    }
+    fn decode_file(encoded_file_contents: Vec<u8>) -> Result<Vec<u8>, BoxedError> {
+        let mut decoder = ZlibDecoder::new(&encoded_file_contents[..]);
+        let mut decompressed: Vec<u8> = vec![];
+        match decoder.read_to_end(&mut decompressed) {
+            Ok(_) => Ok(decompressed),
             Err(e) => {
                 eprintln!("Error Decoding from Vec<u8> to HashObject: {e}");
                 Err(e.into())
