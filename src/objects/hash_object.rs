@@ -28,8 +28,12 @@ impl GitObject for HashObject {
     }
 
     fn formatted_value_as_bytes(&self) -> Vec<u8> {
-        let answer = self.formatted_value();
-        answer.as_bytes().to_vec()
+        let mut answer = vec![];
+        answer.append(&mut b"blob ".to_vec());
+        answer.append(&mut self.size().to_be_bytes().to_vec());
+        answer.append(&mut b"\x00".to_vec());
+        answer.append(&mut self.value.to_vec());
+        answer.to_vec()
     }
     fn size(&self) -> usize {
         self.value.len()
