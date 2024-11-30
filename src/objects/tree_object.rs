@@ -52,11 +52,9 @@ impl TreeObject {
             let sha = Sha1::digest(value).to_vec();
 
             if let Some(next_item) = split_data.get(i + 1) {
-                if next_item.starts_with(sha.as_slice()) {
-                    println!("{:x?}", next_item);
-                    let remainder = next_item.split_at(sha.len()).1.to_vec();
-                    buffer_for_mode_and_name.push(remainder);
-                }
+                println!("{:x?}", next_item);
+                let remainder = next_item.split_at(sha.len()).1.to_vec();
+                buffer_for_mode_and_name.push(remainder);
             }
         }
         buffer_for_mode_and_name.pop();
