@@ -17,11 +17,7 @@ impl HashObject {
 
 impl GitObject for HashObject {
     fn formatted_value(&self) -> String {
-        format!(
-            "blob {}{}",
-            self.size(),
-            String::from_utf8(self.value.to_vec()).unwrap()
-        )
+        String::from_utf8(self.value.to_vec()).unwrap().to_string()
     }
 
     fn unformatted_value(&self) -> String {
