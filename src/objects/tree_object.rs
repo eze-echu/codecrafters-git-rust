@@ -33,7 +33,7 @@ impl TreeObject {
             .skip(1)
             .map(|s| s.to_vec())
             .collect::<Vec<Vec<u8>>>();
-        eprintln!("{:?}", split_by_null_space);
+        println!("{:#?}", split_by_null_space);
         vec![]
         // let mut null_found = false;
         // let mut space_found = false;
