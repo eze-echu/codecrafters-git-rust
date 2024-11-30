@@ -14,6 +14,7 @@ impl HashObject {
         }
     }
 }
+
 impl GitObject for HashObject {
     fn formatted_value(&self) -> String {
         format!(
