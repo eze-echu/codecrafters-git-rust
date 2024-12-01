@@ -67,6 +67,21 @@ impl TryFrom<Vec<u8>> for TreeObject {
     fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
         match Self::decode_file(value) {
             Ok(text_value) => {
+                if &text_value[..4] != b"tree" {
+                    return Err("The file read is not a valid tree object".into());
+                }
+                let first_null_byte_pos = text_value.iter().position(|&b| b == NULL_BYTE).unwrap();
+                let tree_size_bytes: &str =
+                    std::str::from_utf8(text_value[5..].split_at(first_null_byte_pos).0).unwrap();
+                let tree_size = tree_size_bytes.parse().unwrap();
+                //let tree_size = usize::from(text_value[5..].iter().take_while(|&&charcter| value == NULL_BYTE).copied().collect());
+                let mut results: Vec<&[u8]> = vec![];
+                let separated_entities = &text_value[(text_value.len() - tree_size)..];
+                let mut buf: Vec<u8> = vec![];
+                let i: usize = 0;
+                loop {
+                    if i == tree_size {break;}
+                }
                 //let split = re.split(&text_value);
                 //let mut separated_entities = Self::get_only_entities_from_str(&text_value);
                 Ok(Self::new_from_file(

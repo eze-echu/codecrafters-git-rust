@@ -11,6 +11,7 @@ use tempfile::TempDir;
 ///
 /// ### Formatted value
 /// ``` <mode> <name>\0<sha1>
+/// ```
 #[derive(Clone, Ord, Eq, PartialOrd, PartialEq)]
 pub(super) struct TreeObjectEntry {
     entry_name: Arc<Vec<u8>>,
